@@ -1,28 +1,28 @@
 class Medicine {
   int serial;
-  String nombre;
-  String laboratorio;
-  String fecha;
-  String tipo;
+  String name;
+  String laboratory;
+  String date;
+  String type;
 
-  Medicine(this.serial, this.nombre, this.laboratorio, this.fecha, this.tipo);
+  Medicine(this.serial, this.name, this.laboratory, this.date, this.type);
 
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
       'serial': serial,
-      'nombre': nombre,
-      'laboratorio': laboratorio,
-      'fecha': fecha,
-      'tipo': tipo,
+      'name': name,
+      'laboratory': laboratory,
+      'date': date,
+      'type': type,
     };
     return map;
   }
 
   Medicine.fromMap(Map<String, dynamic> map) {
     serial = map['serial'];
-    nombre = map['nombre'];
-    laboratorio = map['laboratorio'];
-    fecha = map['fecha'];
-    tipo = map['tipo'];
+    name = map['nombre'];
+    laboratory = map['laboratory'];
+    date = map['date'];
+    type = map['type'];
   }
 }

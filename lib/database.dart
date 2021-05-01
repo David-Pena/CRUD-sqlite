@@ -6,21 +6,21 @@ import 'package:path_provider/path_provider.dart';
 import 'medicine.dart';
 
 class DB {
-  static Database _db;
+  static Database database;
   static const String SERIAL = 'serial';
-  static const String NOMBRE = 'nombre';
-  static const String LABORATORIO = 'laboratorio';
-  static const String FECHA = 'fecha';
-  static const String TIPO = 'tipo';
+  static const String NAME = 'name';
+  static const String LABORATORY = 'laboratory';
+  static const String DATE = 'date';
+  static const String TYPE = 'type';
   static const String TABLE = 'Medicine';
   static const String DB_NAME = 'medicine.db';
 
   Future<Database> get db async {
-    if (_db != null) {
-      return _db;
+    if (database != null) {
+      return database;
     }
-    _db = await initDB();
-    return _db;
+    database = await initDB();
+    return database;
   }
 
   initDB() async {
@@ -32,19 +32,19 @@ class DB {
 
   _onCreate(Database db, int version) async {
     await db.execute(
-        "CREATE TABLE $TABLE ($SERIAL INTEGER PRIMARY KEY, $NOMBRE TEXT, $LABORATORIO TEXT, $FECHA TEXT, $TIPO TEXT)");
+        "CREATE TABLE $TABLE ($SERIAL INTEGER PRIMARY KEY, $NAME TEXT, $LABORATORY TEXT, $DATE TEXT, $TYPE TEXT)");
   }
 
   Future<Medicine> save(Medicine medicine) async {
-    var dbClient = await db;
-    medicine.serial = await dbClient.insert(TABLE, medicine.toMap());
+    var client = await db;
+    medicine.serial = await client.insert(TABLE, medicine.toMap());
     return medicine;
   }
 
   Future<List<Medicine>> getMedicines() async {
-    var dbClient = await db;
-    List<Map> maps = await dbClient
-        .query(TABLE, columns: [SERIAL, NOMBRE, LABORATORIO, FECHA, TIPO]);
+    var client = await db;
+    List<Map> maps = await client
+        .query(TABLE, columns: [SERIAL, NAME, LABORATORY, DATE, TYPE]);
     List<Medicine> medicines = [];
     if (maps.length > 0) {
       for (int i = 0; i < maps.length; i++) {
@@ -55,19 +55,19 @@ class DB {
   }
 
   Future<int> delete(int serial) async {
-    var dbClient = await db;
-    return await dbClient
+    var client = await db;
+    return await client
         .delete(TABLE, where: '$SERIAL = ?', whereArgs: [serial]);
   }
 
   Future<int> update(Medicine medicine) async {
-    var dbClient = await db;
-    return await dbClient.update(TABLE, medicine.toMap(),
+    var client = await db;
+    return await client.update(TABLE, medicine.toMap(),
         where: '$SERIAL = ?', whereArgs: [medicine.serial]);
   }
 
   Future close() async {
-    var dbClient = await db;
-    dbClient.close();
+    var client = await db;
+    client.close();
   }
 }

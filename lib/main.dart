@@ -22,9 +22,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
+  MyHomePage();
 
   @override
   _MyHomePageState createState() {
@@ -33,28 +31,32 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  // Controllers to TextFormFields
   TextEditingController controllerNAME = TextEditingController();
   TextEditingController controllerLAB = TextEditingController();
+  // List of Objects
   Future<List<Medicine>> medicines;
+  // Default value from a datepicker from flutter API
   DateTime currentDate = DateTime.now();
-  String nombre;
-  String laboratorio;
-  String fecha;
-  String tipo;
-  num option;
+  // Vars to save values given by inputs
+  String name;
+  String laboratory;
+  String date;
+  String type;
+  num optionType;
 
   int curUserId;
 
   final formKey = new GlobalKey<FormState>();
-  var dbHelper;
+  var aide;
   bool isUpdating;
 
   @override
   void initState() {
     super.initState();
-    dbHelper = DB();
+    aide = DataBase();
     isUpdating = false;
-    refreshList();
+    refresh();
   }
 
   Future<void> pickDate(BuildContext context) async {
@@ -66,46 +68,40 @@ class _MyHomePageState extends State<MyHomePage> {
     if (pickedDate != null && pickedDate != currentDate)
       setState(() {
         currentDate = pickedDate;
-        fecha = "${currentDate.toLocal()}".split(' ')[0];
+        date = "${currentDate.toLocal()}".split(' ')[0];
       });
   }
 
-  refreshList() {
+  refresh() {
     setState(() {
-      medicines = dbHelper.getMedicines();
+      medicines = aide.getMedicines();
     });
   }
 
-  clearFields() {
+  clear() {
     controllerNAME.text = '';
     controllerLAB.text = '';
   }
 
   getType() {
-    if (option == 1) {
-      tipo = 'Analgésico';
-    } else if (option == 2) {
-      tipo = 'Antibiótico';
-    }
-
-    return tipo;
+    return optionType == 1 ? 'Analgésico' : 'Antibiótico';
   }
 
   validate() {
     if (formKey.currentState.validate()) {
       formKey.currentState.save();
       if (isUpdating) {
-        Medicine m = Medicine(curUserId, nombre, laboratorio, fecha, getType());
-        dbHelper.update(m);
+        Medicine m = Medicine(curUserId, name, laboratory, date, getType());
+        aide.update(m);
         setState(() {
           isUpdating = false;
         });
       } else {
-        Medicine m = Medicine(null, nombre, laboratorio, fecha, getType());
-        dbHelper.save(m);
+        Medicine m = Medicine(null, name, laboratory, date, getType());
+        aide.save(m);
       }
-      clearFields();
-      refreshList();
+      clear();
+      refresh();
     }
   }
 
@@ -177,10 +173,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         Column(children: [
                           Radio(
                               value: 1,
-                              groupValue: option,
+                              groupValue: optionType,
                               onChanged: (value) {
                                 setState(() {
-                                  option = value;
+                                  optionType = value;
                                 });
                               }),
                           Text("Analgésico",
@@ -190,10 +186,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         Column(children: [
                           Radio(
                               value: 2,
-                              groupValue: option,
+                              groupValue: optionType,
                               onChanged: (value) {
                                 setState(() {
-                                  option = value;
+                                  optionType = value;
                                 });
                               }),
                           Text("Antibiótico",
@@ -217,7 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               setState(() {
                                 isUpdating = false;
                               });
-                              clearFields();
+                              clear();
                             },
                             child: Text('Cancelar'),
                             style: ButtonStyle(
@@ -271,41 +267,41 @@ class _MyHomePageState extends State<MyHomePage> {
                     (medicine) => DataRow(cells: [
                       DataCell(
                           Center(
-                              child: Text(medicine.nombre,
+                              child: Text(medicine.name,
                                   style: TextStyle(fontSize: 10),
                                   textAlign: TextAlign.center)), onTap: () {
                         setState(() {
                           isUpdating = true;
                           curUserId = medicine.serial;
                         });
-                        controllerNAME.text = medicine.nombre;
-                        controllerLAB.text = medicine.laboratorio;
-                        fecha = "${currentDate.toLocal()}".split(' ')[0];
-                        tipo = getType();
+                        controllerNAME.text = medicine.name;
+                        controllerLAB.text = medicine.laboratory;
+                        date = "${currentDate.toLocal()}".split(' ')[0];
+                        type = getType();
                       }),
                       DataCell(
                         Center(
-                            child: Text(medicine.laboratorio,
+                            child: Text(medicine.laboratory,
                                 style: TextStyle(fontSize: 10),
                                 textAlign: TextAlign.center)),
                       ),
                       DataCell(
                         Center(
-                            child: Text(medicine.fecha,
+                            child: Text(medicine.date,
                                 style: TextStyle(fontSize: 10),
                                 textAlign: TextAlign.center)),
                       ),
                       DataCell(
                         Center(
-                            child: Text(medicine.tipo,
+                            child: Text(medicine.type,
                                 style: TextStyle(fontSize: 10),
                                 textAlign: TextAlign.center)),
                       ),
                       DataCell(IconButton(
                           icon: Icon(Icons.delete),
                           onPressed: () {
-                            dbHelper.delete(medicine.serial);
-                            refreshList();
+                            aide.delete(medicine.serial);
+                            refresh();
                           })),
                     ]),
                   )
