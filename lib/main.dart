@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:toast/toast.dart';
 import 'medicine.dart';
 import 'dart:async';
 import 'database.dart';
@@ -32,8 +33,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   // Controllers to TextFormFields
-  TextEditingController controllerNAME = TextEditingController();
-  TextEditingController controllerLAB = TextEditingController();
+  TextEditingController ctrlName = TextEditingController();
+  TextEditingController ctrlLab = TextEditingController();
   // List of Objects
   Future<List<Medicine>> medicines;
   // Default value from a datepicker from flutter API
@@ -45,20 +46,21 @@ class _MyHomePageState extends State<MyHomePage> {
   String type;
   num optionType;
 
-  int curUserId;
+  int currentSerial;
 
   final formKey = new GlobalKey<FormState>();
-  var aide;
+  var aide; // var to use database methods
   bool isUpdating;
 
   @override
   void initState() {
     super.initState();
-    aide = DataBase();
+    aide = DB();
     isUpdating = false;
     refresh();
   }
 
+  // method for datepicker from flutter
   Future<void> pickDate(BuildContext context) async {
     final DateTime pickedDate = await showDatePicker(
         context: context,
@@ -79,26 +81,31 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   clear() {
-    controllerNAME.text = '';
-    controllerLAB.text = '';
+    ctrlName.text = '';
+    ctrlLab.text = '';
   }
 
   getType() {
-    return optionType == 1 ? 'Analgésico' : 'Antibiótico';
+    if (optionType != null)
+      return optionType == 1 ? 'Analgésico' : 'Antibiótico';
   }
 
   validate() {
     if (formKey.currentState.validate()) {
       formKey.currentState.save();
       if (isUpdating) {
-        Medicine m = Medicine(curUserId, name, laboratory, date, getType());
+        Medicine m = Medicine(currentSerial, name, laboratory, date, getType());
         aide.update(m);
         setState(() {
           isUpdating = false;
         });
       } else {
-        Medicine m = Medicine(null, name, laboratory, date, getType());
-        aide.save(m);
+        if (getType() != null && date != null) {
+          Medicine m = Medicine(null, name, laboratory, date, getType());
+          aide.save(m);
+        } else {
+          Toast.show("You haven't select a date or a type", context);
+        }
       }
       clear();
       refresh();
@@ -116,28 +123,27 @@ class _MyHomePageState extends State<MyHomePage> {
                 verticalDirection: VerticalDirection.down,
                 children: <Widget>[
                   TextFormField(
-                    controller: controllerNAME,
+                    controller: ctrlName,
                     keyboardType: TextInputType.text,
                     textCapitalization: TextCapitalization.words,
                     style: TextStyle(fontFamily: 'Georgia', fontSize: 15),
                     decoration: InputDecoration(
-                      labelText: 'Nombre',
+                      labelText: 'Name',
                       prefixIcon: Icon(
                         Icons.medical_services_outlined,
                         color: Colors.orange,
                       ),
                       contentPadding: EdgeInsets.all(2),
                     ),
-                    validator: (val) =>
-                        val.length == 0 ? 'Ingrese Nombre' : null,
-                    onSaved: (val) => nombre = val,
+                    validator: (val) => val.length == 0 ? 'Enter Name' : null,
+                    onSaved: (val) => name = val,
                   ),
                   TextFormField(
-                    controller: controllerLAB,
+                    controller: ctrlLab,
                     keyboardType: TextInputType.text,
                     style: TextStyle(fontFamily: 'Georgia'),
                     decoration: InputDecoration(
-                      labelText: 'Laboratorio',
+                      labelText: 'Laboratory',
                       prefixIcon: Icon(
                         Icons.location_city_outlined,
                         color: Colors.orange,
@@ -145,8 +151,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       contentPadding: EdgeInsets.all(10),
                     ),
                     validator: (val) =>
-                        val.length == 0 ? 'Ingrese Laboratorio' : null,
-                    onSaved: (val) => laboratorio = val,
+                        val.length == 0 ? 'Enter Laboratory' : null,
+                    onSaved: (val) => laboratory = val,
                   ),
                   Padding(padding: EdgeInsets.all(10)),
                   Row(
@@ -159,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               fontWeight: FontWeight.bold)),
                       ElevatedButton(
                           onPressed: () => pickDate(context),
-                          child: Text('Seleccionar fecha'),
+                          child: Text('Select expiration date'),
                           style: ButtonStyle(
                             backgroundColor:
                                 MaterialStateProperty.all<Color>(Colors.orange),
@@ -233,25 +239,25 @@ class _MyHomePageState extends State<MyHomePage> {
               columns: [
                 DataColumn(
                   label: Center(
-                      child: Text('NOMBRE',
+                      child: Text('NAME',
                           style: TextStyle(fontSize: 10),
                           textAlign: TextAlign.center)),
                 ),
                 DataColumn(
                   label: Center(
-                      child: Text('LABORATORIO',
+                      child: Text('LABORATORY',
                           style: TextStyle(fontSize: 10),
                           textAlign: TextAlign.center)),
                 ),
                 DataColumn(
                   label: Center(
-                      child: Text('FECHA',
+                      child: Text('EXPIRATION DATE',
                           style: TextStyle(fontSize: 10),
                           textAlign: TextAlign.center)),
                 ),
                 DataColumn(
                   label: Center(
-                      child: Text('TIPO',
+                      child: Text('TYPE',
                           style: TextStyle(fontSize: 10),
                           textAlign: TextAlign.center)),
                 ),
@@ -272,10 +278,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                   textAlign: TextAlign.center)), onTap: () {
                         setState(() {
                           isUpdating = true;
-                          curUserId = medicine.serial;
+                          currentSerial = medicine.serial;
                         });
-                        controllerNAME.text = medicine.name;
-                        controllerLAB.text = medicine.laboratory;
+                        ctrlName.text = medicine.name;
+                        ctrlLab.text = medicine.laboratory;
                         date = "${currentDate.toLocal()}".split(' ')[0];
                         type = getType();
                       }),
@@ -332,7 +338,7 @@ class _MyHomePageState extends State<MyHomePage> {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           backgroundColor: Colors.orange,
-          title: Text('Sistema de Registro'),
+          title: Text('Medication Registration System'),
         ),
         body: new Container(
             child: new Column(

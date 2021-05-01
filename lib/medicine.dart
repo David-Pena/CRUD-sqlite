@@ -20,7 +20,7 @@ class Medicine {
 
   Medicine.fromMap(Map<String, dynamic> map) {
     serial = map['serial'];
-    name = map['nombre'];
+    name = map['name'];
     laboratory = map['laboratory'];
     date = map['date'];
     type = map['type'];
